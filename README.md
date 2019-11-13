@@ -1,6 +1,6 @@
 # 6GEI311_FinalProject
 
-IP Camera: 192.168.1.64
+IP Camera: 172.16.12.131
 
 Personnal computer: plug a wire into the NET port in the labs
 
