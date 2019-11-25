@@ -22,20 +22,20 @@ def imshow(arr):
     plt.show()
 
 
-def get_photo(img):
-    # """Get a photo from the IP camera"""
-    # url = 'http://172.16.12.131/Streaming/channels/1/picture'
-    # response = requests.get(url, auth=('admin', 'linux111'))
-    # return response.content
-    if img == 1:
-        with open("data/image1.jpg", "rb") as image:
-            f = image.read()
-            b = bytearray(f)
-    if img == 2:
-        with open("data/image2.jpg", "rb") as image:
-            f = image.read()
-            b = bytearray(f)
-    return b
+# def get_photo(img):
+#     # """Get a photo from the IP camera"""
+#     # url = 'http://172.16.12.131/Streaming/channels/1/picture'
+#     # response = requests.get(url, auth=('admin', 'linux111'))
+#     # return response.content
+#     if img == 1:
+#         with open("data/image1.jpg", "rb") as image:
+#             f = image.read()
+#             b = bytearray(f)
+#     if img == 2:
+#         with open("data/image2.jpg", "rb") as image:
+#             f = image.read()
+#             b = bytearray(f)
+#     return b
 
 
 def pre_treat_img(img):
@@ -43,8 +43,8 @@ def pre_treat_img(img):
     img_bytes = Image.open(BytesIO(img))
     img_grayscale = img_bytes.convert('L')
     arr = np.array(img_grayscale)
-    arr = arr.astype(np.int16)
-    return gaussian(arr, sigma=3)
+    return arr.astype(np.int16)
+    # return gaussian(arr, sigma=3)
 
 
 if __name__ == "__main__":
@@ -55,7 +55,8 @@ if __name__ == "__main__":
 
     img_diff = np.abs(img2_treated - img1_treated)
     # bw_img = np.bitwise_and(img_diff, img_diff2)
-    bw = closing(img_diff > 1, square(3))
+    imshow(img_diff)
+    bw = closing(img_diff > 80, square(3))
     cleared = clear_border(bw)
 
     label_image = label(cleared)
