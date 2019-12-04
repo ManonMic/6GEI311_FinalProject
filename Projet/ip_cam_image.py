@@ -8,9 +8,9 @@ import time
 photo_name_list = []
 
 def get_time():
-    """Get time as a string : day-month-year-h+min+sc"""
+    """Get time as a string : dd-mm-yy-hhmmss"""
     now = datetime.now()
-    str_time = now.strftime("%m-%d-%Y_%H%M%S")
+    str_time = now.strftime("%m-%d-%Y-%H%M%S")
     return str_time
 
 
@@ -30,7 +30,7 @@ def get_photo():
     if reponse.status_code == 200:
         return reponse.content
     else:
-        print("Can't get any reponse")
+        raise ValueError("Can't get any response")
 
 
 def save_photo():
@@ -61,4 +61,4 @@ def loop_saving_photos():
 
 
 if __name__ == "__main__":
-    loop_saving_photos()
+    get_photo()
