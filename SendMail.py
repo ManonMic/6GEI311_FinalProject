@@ -4,10 +4,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 import os
 
-def EnvoyerMail(dest, subject, body, ImgFileName = None):
-	#gmail_user = 'cameraexpress123@gmail.com'
-	#gmail_password = 'LucasEnRetard123'
-	
+def SendMail(dest, subject, body, ImgFileName = None):
 	mail = MIMEMultipart()
 	mail['From'] = 'cameraexpress123@gmail.com'
 	mail['Pass'] = 'LucasEnRetard123'
@@ -26,13 +23,13 @@ def EnvoyerMail(dest, subject, body, ImgFileName = None):
 		server.ehlo()
 		server.login(mail['From'], mail['Pass'])
 	except:
-		print('Erreur Login')
+		print('Login error')
 		return
 	try:
 		server.sendmail(mail['From'], mail['To'], mail.as_string())
-		print('Mail Envoyer')
+		print('Email sent')
 		return 
 	except:
-		print('Erreur envoie mail')
+		print('Error sending email')
 		return 
 	server.quit()
