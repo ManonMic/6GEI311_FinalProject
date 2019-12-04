@@ -40,24 +40,25 @@ def imshow(arr):
     plt.show()
 
 
-@staticmethod
 def _to_np_array(byte_stream):
     arr = np.array(byte_stream)
     return arr.astype(np.int16)
 
-@staticmethod
+
 def _resize_img(arr):
     """This ratio was chosen to get rid of the camera UI text"""
     return arr[130:1350, :]
 
-@staticmethod
+
 def _open_as_bytestream(img):
     return Image.open(BytesIO(img))
+
 
 def _to_grayscale(arr):
     img_bytes = _open_as_bytestream(arr)
     img_bytes = img_bytes.convert('L')
     return img_bytes
+
 
 def _prepare_image(img):
     """Convert an image byte stream to grayscale into an array and applies a Gaussian blur to reduce noise """
@@ -68,12 +69,13 @@ def _prepare_image(img):
     arr = _to_np_array(arr)
     return arr
 
-@staticmethod
+
 def _subtract_images(img1, img2):
     """Pixel per pixel differentiation and turning the result to black and white"""
     diff = np.abs(img2 - img1)
     diff = np.where(diff > 15, 255, 0)
     return diff
+
 
 def process(img_arr):
     if len(img_arr) != 3:
