@@ -43,7 +43,7 @@ def get_photo(img):
 
 
 def imshow(arr):
-    plt.imshow(arr, cmap='gray', vmin=0, vmax=255)
+    plt.imshow(arr, vmin=0, vmax=255)
     plt.tight_layout()
     plt.show()
 
@@ -104,9 +104,7 @@ class ImageProcessor:
 
         # step 4 : make a diff of each image vs its predecessor
         img_diff = self._subtract_images(img3_prepared, img2_prepared)
-        imshow(img_diff)
         img_diff2 = self._subtract_images(img3_prepared, img1_prepared)
-        imshow(img_diff2)
 
         # step 5: Do a bitwise comparison between the two differentiations
         bw_img = np.bitwise_and(img_diff2, img_diff)
