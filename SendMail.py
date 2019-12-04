@@ -3,8 +3,11 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 import os
+from Projet import request
+import time
 
-def SendMail(dest, subject, body, ImgFileName = None):
+
+def SendMail(dest, subject, body, image_bytestring=None):
 	mail = MIMEMultipart()
 	mail['From'] = 'cameraexpress123@gmail.com'
 	mail['Pass'] = 'LucasEnRetard123'
@@ -13,9 +16,11 @@ def SendMail(dest, subject, body, ImgFileName = None):
 	text = MIMEText(body)
 	mail.attach(text)
 	
-	if ImgFileName != None:		
-		img_data = open(ImgFileName, 'rb').read()
-		image = MIMEImage(img_data, _subtype="jpg", name=os.path.basename(ImgFileName))
+	if image_bytestring:		
+		path = "images/" + str(time.time()) + ".jpg"
+		image_bytestring.save(path)
+		img_data = open(path, 'rb').read()
+		image = MIMEImage(img_data, _subtype="jpg", name=os.path.basename(path))
 		mail.attach(image)
 	
 	try:
