@@ -2,8 +2,6 @@ from threading import Thread, Event
 
 from request import get_photo
 from image_processing import process, imshow
-import interface
-
 
 img_list = []
 
