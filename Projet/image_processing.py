@@ -118,17 +118,3 @@ def process(img_arr):
             set_color(output_img, (rr, cc), [255, 0, 0])
 
     return output_img, movement
-
-
-# if __name__ == "__main__":
-    # step 1 : acquire images
-    # img1 = get_photo_offline(1)
-    # img2 = get_photo_offline(2)
-    # img3 = get_photo_offline(3)
-    #
-    # img_pr = ImageProcessor()
-    # result_img, someone_broke_in = img_pr.process([img1, img2, img3])
-    #
-    # imshow(result_img)
-    # if someone_broke_in:
-    #     print("oh shoot someone broke in!")
