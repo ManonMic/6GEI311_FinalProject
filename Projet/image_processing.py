@@ -78,9 +78,11 @@ def _subtract_images(img1, img2):
 
 
 def process(img_arr):
-    if len(img_arr) != 3:
+    min_img_number = 3
+    if len(img_arr) != min_img_number:
         raise ValueError(
-            "process requires an array of 3 images: img_arr parameter contains {} elements".format(len(img_arr))
+            "process requires an array of {} images: img_arr parameter contains {} elements"
+            .format(min_img_number, len(img_arr))
         )
 
     # step 2 : Prepare images
@@ -110,7 +112,7 @@ def process(img_arr):
     # step 8 : draw red box mask around large enough regions and apply to output image
     movement = False
     for region in regionprops(label_image):
-        if region.area >= 200:
+        if region.area >= 1000:
             movement = True
             minr, minc, maxr, maxc = region.bbox
             rr, cc = polygon_perimeter([minr-1, maxr-1, maxr-1, minr-1],
