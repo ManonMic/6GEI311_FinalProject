@@ -4,46 +4,34 @@ from PIL import Image
 from io import BytesIO
 import threading
 from Projet import request
-import SendMail
+import send_email
 import time
 
 
-class App(threading.Thread):
+class GUI(threading.Thread):
     def __init__(self):
+        self.root = tk.Tk()
+        self.send_mail = True
+        self.img = bytearray()
+        self.image = bytearray()
+        self.image_bytestring = Image.open(BytesIO(self.img))
+        self.button_off = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
+        self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
+        self.button_send = tk.Button(self.root, text="Envoyer mail", command=self.send_mail_test)
+
+        self.root.geometry("1600x900")
+        self.root.title("Logiciel de surveillance")
+        self.button_off.pack()
+        self.button_close.pack()
+        self.label = tk.Label()
+
+        self.button_send.pack()
         threading.Thread.__init__(self)
         self.start()
 
     def run(self):
-        self.root = tk.Tk()
-        self.root.geometry("1600x900") 
-        self.root.title("Logiciel de surveillance")   
-        self.send_mail = True
-
-        self.img = request.get_photo()   
-
-        self.button_off = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
-        self.button_off.pack()
-
-        self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
-        self.button_close.pack()
-
         self.image = Image.open(BytesIO(self.img))
-        self.root.geometry("1600x900")
-        self.root.title("Logiciel de surveillance")   
-        self.send_mail = True
 
-        self.img = request.get_photo()   
-
-        self.button_off = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
-        self.button_off.pack()
-
-        self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
-        self.button_close.pack()
-
-        self.button_send = tk.Button(self.root, text="Envoyer mail", command=self.send_mail_test)
-        self.button_send.pack()
-
-        self.image_bytestring = Image.open(BytesIO(self.img))
         self.image = self.image_bytestring.resize((1600, 900), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.image)
 
@@ -54,11 +42,11 @@ class App(threading.Thread):
         self.root.mainloop()
 
     def send_mail_test (self):    
-        SendMail.SendMail(dest="manon190.mm@gmail.com", subject="Détection personne", 
-                          body="Une personne a été repérée", image_bytestring=self.image_bytestring)
+        send_email.send_email(dest="manon190.mm@gmail.com", subject="Détection personne",
+                          body="Reeeeee!", image_bytestring=self.image_bytestring)
 
-    def change_img(self):
-        self.image = request.get_photo()
+    def change_img(self, bytearray_img):
+        self.image = bytearray_img
         self.image = Image.open(BytesIO(self.image))
         self.image = self.image.resize((1600, 900), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.image)
@@ -79,5 +67,4 @@ class App(threading.Thread):
 
 
 if __name__ == "__main__":
-    app = App()
-    print("yo")
+    gui = GUI()
