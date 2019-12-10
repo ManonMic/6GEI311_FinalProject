@@ -12,7 +12,7 @@ from scipy.linalg import norm
 from scipy.ndimage import gaussian_filter as gaussian
 from skimage.color import label2rgb
 from skimage.draw import polygon_perimeter, set_color
-from skimage.filters import gaussian
+from skimage.filters import gaussian, threshold_otsu
 from skimage.measure import label, regionprops
 from skimage.morphology import closing, square
 from skimage.segmentation import clear_border
@@ -35,7 +35,7 @@ def get_photo_offline(img):
 
 
 def imshow(arr):
-    plt.imshow(arr, vmin=0, vmax=255)
+    plt.imshow(arr, vmin=0, vmax=255, cmap='gray')
     plt.tight_layout()
     plt.show()
 
@@ -96,41 +96,31 @@ def process(img_arr):
     output_img = _resize_img(output_img)
 
     # step 4 : make a diff of each image vs its predecessor
-    img_diff = _subtract_images(img3_prepared, img2_prepared)
-    img_diff2 = _subtract_images(img3_prepared, img1_prepared)
+    img_diff = _subtract_images(img2_prepared, img3_prepared)
 
     # step 5: Do a bitwise comparison between the two differentiations
-    bw_img = np.bitwise_and(img_diff2, img_diff)
 
     # step 6 : apply a threshold to remove gaps
-    bw = closing(bw_img > 0, square(3))
+    thresh = threshold_otsu(img_diff)
+    bw = closing(img_diff > thresh, square(3))
     cleared = clear_border(bw)
 
     # step 7 : label image regions
     label_image = label(cleared)
+    label2rgb(label=label_image, image=output_img)
 
     # step 8 : draw red box mask around large enough regions and apply to output image
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.imshow(output_img)
     movement = False
     for region in regionprops(label_image):
-        if region.area >= 1000:
+        if region.area >= 2000:
             movement = True
             minr, minc, maxr, maxc = region.bbox
-            rr, cc = polygon_perimeter([minr-1, maxr-1, maxr-1, minr-1],
-                                       [minc-1, minc-1, maxc-1, maxc-1])
-            set_color(output_img, (rr, cc), [255, 0, 0])
+            rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
+                                      fill=False, edgecolor='red', linewidth=2)
+            ax.add_patch(rect)
 
+    ax.set_axis_off()
+    plt.tight_layout()
     return output_img, movement
-
-
-# if __name__ == "__main__":
-    # step 1 : acquire images
-    # img1 = get_photo_offline(1)
-    # img2 = get_photo_offline(2)
-    # img3 = get_photo_offline(3)
-    #
-    # img_pr = ImageProcessor()
-    # result_img, someone_broke_in = img_pr.process([img1, img2, img3])
-    #
-    # imshow(result_img)
-    # if someone_broke_in:
-    #     print("oh shoot someone broke in!")
