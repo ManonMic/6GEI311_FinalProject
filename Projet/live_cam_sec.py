@@ -22,7 +22,7 @@ class GetImgThread(Thread):
 
 
 if __name__ == "__main__":
-    # interface = interface()
+    interface = interface()
     # stop_flag = Event()
     # img_thread = GetImgThread(stop_flag)
     # img_thread.start()
