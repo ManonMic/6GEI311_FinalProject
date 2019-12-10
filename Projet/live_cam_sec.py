@@ -2,6 +2,7 @@ from threading import Thread, Event
 
 from request import get_photo
 from image_processing import process, imshow, get_photo_offline
+from interface import Interface
 
 img_list = []
 
@@ -22,7 +23,7 @@ class GetImgThread(Thread):
 
 
 if __name__ == "__main__":
-    interface = interface()
+    interface = Interface()
     # stop_flag = Event()
     # img_thread = GetImgThread(stop_flag)
     # img_thread.start()

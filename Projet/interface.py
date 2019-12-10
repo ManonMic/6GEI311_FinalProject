@@ -8,7 +8,7 @@ import send_email
 import time
 
 
-class GUI(threading.Thread):
+class Interface(threading.Thread):
     def __init__(self):
         self.root = tk.Tk()
         self.send_mail = True
@@ -67,4 +67,4 @@ class GUI(threading.Thread):
 
 
 if __name__ == "__main__":
-    gui = GUI()
+    gui = Interface()
