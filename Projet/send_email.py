@@ -7,7 +7,7 @@ from Projet import request
 import time
 
 
-def SendMail(dest, subject, body, image_bytestring=None):
+def send_email(dest, subject, body, image_bytestring=None):
 	mail = MIMEMultipart()
 	mail['From'] = 'cameraexpress123@gmail.com'
 	mail['Pass'] = 'LucasEnRetard123'
@@ -16,7 +16,7 @@ def SendMail(dest, subject, body, image_bytestring=None):
 	text = MIMEText(body)
 	mail.attach(text)
 	
-	if image_bytestring:		
+	if image_bytestring:
 		path = "images/" + str(time.time()) + ".jpg"
 		image_bytestring.save(path)
 		img_data = open(path, 'rb').read()
@@ -27,14 +27,15 @@ def SendMail(dest, subject, body, image_bytestring=None):
 		server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		server.ehlo()
 		server.login(mail['From'], mail['Pass'])
-	except:
+	except ConnectionError:
 		print('Login error')
 		return
+
 	try:
 		server.sendmail(mail['From'], mail['To'], mail.as_string())
 		print('Email sent')
-		return 
 	except:
 		print('Error sending email')
-		return 
+		return
+
 	server.quit()
