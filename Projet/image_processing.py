@@ -20,15 +20,15 @@ from skimage.segmentation import clear_border
 
 def get_photo_offline(img):
     if img == 1:
-        with open("data/tester1.jpg", "rb") as image:
+        with open("Projet\\data\\tester1.jpg", "rb") as image:
             f = image.read()
             b = bytearray(f)
     if img == 2:
-        with open("data/tester2.jpg", "rb") as image:
+        with open("Projet\\data\\tester2.jpg", "rb") as image:
             f = image.read()
             b = bytearray(f)
     if img == 3:
-        with open("data/tester3.jpg", "rb") as image:
+        with open("Projet\\data\\tester3.jpg", "rb") as image:
             f = image.read()
             b = bytearray(f)
     return b
@@ -42,7 +42,7 @@ def imshow(arr):
 
 def _to_np_array(byte_stream):
     arr = np.array(byte_stream)
-    return arr.astype(np.int16)
+    return arr.astype(np.uint8)
 
 
 def _resize_img(arr):
