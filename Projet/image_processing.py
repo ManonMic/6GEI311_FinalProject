@@ -78,49 +78,49 @@ def _subtract_images(img1, img2):
 
 
 def process(img_arr):
-    min_img_number = 3
+    min_img_number = 2
     if len(img_arr) != min_img_number:
         raise ValueError(
             "process requires an array of {} images: img_arr parameter contains {} elements"
             .format(min_img_number, len(img_arr))
         )
 
-    # step 2 : Prepare images
     img1_prepared = _prepare_image(img_arr[0])
     img2_prepared = _prepare_image(img_arr[1])
-    img3_prepared = _prepare_image(img_arr[2])
 
-    # step 3 : resize a copy of the last image to use as the output
     output_img = _open_as_bytestream(img_arr[-1])
     output_img = _to_np_array(output_img)
     output_img = _resize_img(output_img)
 
-    # step 4 : make a diff of each image vs its predecessor
-    img_diff = _subtract_images(img2_prepared, img3_prepared)
+    img_diff = _subtract_images(img1_prepared, img2_prepared)
 
-    # step 5: Do a bitwise comparison between the two differentiations
-
-    # step 6 : apply a threshold to remove gaps
     thresh = threshold_otsu(img_diff)
     bw = closing(img_diff > thresh, square(3))
     cleared = clear_border(bw)
 
-    # step 7 : label image regions
     label_image = label(cleared)
     label2rgb(label=label_image, image=output_img)
 
-    # step 8 : draw red box mask around large enough regions and apply to output image
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.imshow(output_img)
     movement = False
-    for region in regionprops(label_image):
-        if region.area >= 2000:
-            movement = True
+    regions = regionprops(label_image)
+    minrow, mincol, maxrow, maxcol = regions[0].bbox
+    for region in regions:
+        if region.area >= 1000:
             minr, minc, maxr, maxc = region.bbox
-            rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
-                                      fill=False, edgecolor='red', linewidth=2)
-            ax.add_patch(rect)
+            if minr < minrow:
+                minrow = minr
+            if maxr > maxrow:
+                maxrow = maxr
+            if minc < mincol:
+                mincol = minc
+            if maxc > maxcol:
+                maxcol = maxr
+        movement = True
 
+    rect = mpatches.Rectangle((mincol, minrow), maxcol - mincol, maxrow - minrow,
+                              fill=False, edgecolor='red', linewidth=2)
+    ax.add_patch(rect)
     ax.set_axis_off()
     plt.tight_layout()
     return output_img, movement
