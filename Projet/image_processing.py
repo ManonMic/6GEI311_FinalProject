@@ -94,8 +94,9 @@ def process(img_arr):
 
     img_diff = _subtract_images(img1_prepared, img2_prepared)
 
-    thresh = threshold_otsu(img_diff)
-    bw = closing(img_diff > thresh, square(3))
+    # imshow(img_diff)
+    # thresh = threshold_otsu(img_diff)
+    bw = closing(img_diff > 0, square(3))
     cleared = clear_border(bw)
 
     label_image = label(cleared)
@@ -104,23 +105,22 @@ def process(img_arr):
     fig, ax = plt.subplots(figsize=(10, 6))
     movement = False
     regions = regionprops(label_image)
-    minrow, mincol, maxrow, maxcol = regions[0].bbox
-    for region in regions:
-        if region.area >= 1000:
-            minr, minc, maxr, maxc = region.bbox
-            if minr < minrow:
-                minrow = minr
-            if maxr > maxrow:
-                maxrow = maxr
-            if minc < mincol:
-                mincol = minc
-            if maxc > maxcol:
-                maxcol = maxr
-        movement = True
+    if len(regions) > 0:
+        minrow, mincol, maxrow, maxcol = regions[0].bbox
+        for region in regions:
+            if region.area >= 1000:
+                minr, minc, maxr, maxc = region.bbox
+                if minr < minrow:
+                    minrow = minr
+                if maxr > maxrow:
+                    maxrow = maxr
+                if minc < mincol:
+                    mincol = minc
+                if maxc > maxcol:
+                    maxcol = maxr
+            movement = True
 
-    rr, cc = polygon_perimeter([minrow - 1, maxrow - 1, maxrow - 1, minrow - 1],
-                               [mincol - 1, mincol - 1, maxcol - 1, maxcol - 1])
-    set_color(output_img, (rr, cc), [255, 0, 0])
-    ax.set_axis_off()
-    plt.tight_layout()
+        rr, cc = polygon_perimeter([minrow - 1, maxrow - 1, maxrow - 1, minrow - 1],
+                                   [mincol - 1, mincol - 1, maxcol - 1, maxcol - 1])
+        set_color(output_img, (rr, cc), [255, 0, 0])
     return output_img, movement
