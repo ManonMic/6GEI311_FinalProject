@@ -12,6 +12,7 @@ class Interface(threading.Thread):
         self.send_mail = True
         # self.img = bytearray()
         self.image = bytearray()
+        self.lbl_img = tk.Label(self.root)
         # self.image_bytestring = Image.open(BytesIO(self.img))
         self.button_off = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
         self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
@@ -32,17 +33,11 @@ class Interface(threading.Thread):
                           body="Reeeeee!", image_bytestring=self.image_bytestring)
 
     def change_img(self, bytearray_img):
-        self.image = bytearray_img
-        # self.image = Image.open(BytesIO(self.image))
-        # self.image = self.image.resize((1600, 900), Image.ANTIALIAS)
-        self.image = ImageTk.PhotoImage(image=Image.fromarray(bytearray_img))
+        bw_test = Image.fromarray(bytearray_img.astype('uint8'))
+        self.image = ImageTk.PhotoImage(bw_test)
+        self.lbl_img = tk.Label(self.root, image=self.image)
+        self.lbl_img.pack()
 
-        # self.label.configure(image=self.image)
-        # self.label.image = self.image
-        # self.root.after(500, self.change_img)
-        self.canvas = tk.Canvas(self.root, width=1600, height=900)
-        self.canvas.pack()
-        self.canvas.create_image(0, 0, anchor="nw", image=self.image)
         self.root.mainloop()
 
     def disable_send_mail(self):
