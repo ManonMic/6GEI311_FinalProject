@@ -42,7 +42,7 @@ def imshow(arr):
 
 def _to_np_array(byte_stream):
     arr = np.array(byte_stream)
-    return arr.astype(np.int16)
+    return arr.astype(np.uint8)
 
 
 def _resize_img(arr):
