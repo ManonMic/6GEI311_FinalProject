@@ -29,7 +29,6 @@ if __name__ == "__main__":
     img_thread.start()
     img_list.append(get_photo_offline(1))
     img_list.append(get_photo_offline(2))
-    img_list.append(get_photo_offline(3))
     # while True:
     if len(img_list) > 1:
         # imgs = []
@@ -37,6 +36,5 @@ if __name__ == "__main__":
         #     imgs.append(img_list[i])
         # del img_list[0]
         output_img, movement = process(img_list)
-        # imshow(output_img)
         interface.change_img(output_img)
         # change image
