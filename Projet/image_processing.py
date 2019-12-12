@@ -42,7 +42,7 @@ def imshow(arr):
 
 def _to_np_array(byte_stream):
     arr = np.array(byte_stream)
-    return arr.astype(np.uint8)
+    return arr.astype(np.int16)
 
 
 def _resize_img(arr):
@@ -118,9 +118,9 @@ def process(img_arr):
                 maxcol = maxr
         movement = True
 
-    rect = mpatches.Rectangle((mincol, minrow), maxcol - mincol, maxrow - minrow,
-                              fill=False, edgecolor='red', linewidth=2)
-    ax.add_patch(rect)
+    rr, cc = polygon_perimeter([minrow - 1, maxrow - 1, maxrow - 1, minrow - 1],
+                               [mincol - 1, mincol - 1, maxcol - 1, maxcol - 1])
+    set_color(output_img, (rr, cc), [255, 0, 0])
     ax.set_axis_off()
     plt.tight_layout()
     return output_img, movement
