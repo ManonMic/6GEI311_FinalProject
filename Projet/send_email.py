@@ -1,9 +1,13 @@
 import smtplib
+import numpy as np
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 import os
 import time
+from io import BytesIO
+
+from PIL import Image
 
 
 def send_email(dest, subject, body, image_bytestring=None):
@@ -15,9 +19,11 @@ def send_email(dest, subject, body, image_bytestring=None):
 	text = MIMEText(body)
 	mail.attach(text)
 	
-	if image_bytestring:
-		path = "images/" + str(time.time()) + ".jpg"
-		image_bytestring.save(path)
+	if image_bytestring is not None:
+		path = "images/" + str(time.time()) + ".png"
+		rescaled = (255.0 / image_bytestring.max() * (image_bytestring - image_bytestring.min())).astype(np.uint8)
+		image = Image.fromarray(rescaled)
+		image.save(path)
 		img_data = open(path, 'rb').read()
 		image = MIMEImage(img_data, _subtype="jpg", name=os.path.basename(path))
 		mail.attach(image)
