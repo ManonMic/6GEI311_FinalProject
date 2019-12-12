@@ -109,6 +109,7 @@ def process(img_arr):
         minrow, mincol, maxrow, maxcol = regions[0].bbox
         for region in regions:
             if region.area >= 1000:
+                movement = True
                 minr, minc, maxr, maxc = region.bbox
                 if minr < minrow:
                     minrow = minr
@@ -118,7 +119,6 @@ def process(img_arr):
                     mincol = minc
                 if maxc > maxcol:
                     maxcol = maxr
-            movement = True
 
         rr, cc = polygon_perimeter([minrow - 1, maxrow - 1, maxrow - 1, minrow - 1],
                                    [mincol - 1, mincol - 1, maxcol - 1, maxcol - 1])
