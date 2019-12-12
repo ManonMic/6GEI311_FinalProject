@@ -1,6 +1,5 @@
 import tkinter as tk
-from PIL import ImageTk
-from PIL import Image
+from PIL import Image, ImageTk
 from io import BytesIO
 import threading
 import send_email
@@ -12,7 +11,7 @@ class Interface(threading.Thread):
         self.root = tk.Tk()
         self.send_mail = True
         # self.img = bytearray()
-        # self.image = bytearray()
+        self.image = bytearray()
         # self.image_bytestring = Image.open(BytesIO(self.img))
         self.button_off = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
         self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
@@ -27,18 +26,6 @@ class Interface(threading.Thread):
         self.button_send.pack()
         threading.Thread.__init__(self)
         self.start()
-
-    # def run(self):
-    #     self.image = Image.open(BytesIO(self.img))
-
-    #     self.image = self.image_bytestring.resize((1600, 900), Image.ANTIALIAS)
-    #     self.image = ImageTk.PhotoImage(self.image)
-
-    #     self.label = tk.Label(self.root, image=self.image)
-    #     self.label.pack()
-
-    #     self.root.after(500, self.change_img)
-    #     self.root.mainloop()
 
     def send_mail_test (self):    
         send_email.send_email(dest="manon190.mm@gmail.com", subject="Détection personne",
@@ -55,7 +42,7 @@ class Interface(threading.Thread):
         # self.root.after(500, self.change_img)
         self.canvas = tk.Canvas(self.root, width=1600, height=900)
         self.canvas.pack()
-        self.canvas.create_image(0,0, anchor="nw", image=self.image)
+        self.canvas.create_image(0, 0, anchor="nw", image=self.image)
         self.root.mainloop()
 
     def disable_send_mail(self):
