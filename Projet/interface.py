@@ -43,6 +43,8 @@ class Interface:
         self.button_running = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
         self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
         self.button_send = tk.Button(self.root, text="Envoyer mail", command=self.send_mail)
+        self.label_get_email = tk.Label(self.root, text="Email du destinataire = ")
+        self.entry_mail_dest = tk.Entry(self.root)
 
         self.root.geometry("1600x900")
         self.root.title("Logiciel de surveillance")
@@ -53,8 +55,10 @@ class Interface:
     def create_layout(self):
         self.button_running.grid(row=0, column=2, columnspan=3, rowspan=1)
         self.button_close.grid(row=1, column=2, columnspan=3, rowspan=1)
-        self.button_send.grid(row=2, column=2, columnspan=3, rowspan=1)
-        self.image_display.grid(row=3, column=2, columnspan=2, rowspan=2)
+        self.label_get_email.grid(row=2, column=2, columnspan=3, rowspan=1)
+        self.entry_mail_dest.grid(row=3, column=2, columnspan=3, rowspan=1)
+        self.button_send.grid(row=4, column=2, columnspan=3, rowspan=1)
+        self.image_display.grid(row=5, column=2, columnspan=2, rowspan=2)
 
     def is_running(self):
         return self.running
@@ -76,7 +80,7 @@ class Interface:
             timestamp = datetime.datetime.fromtimestamp(self.email_last_sent).strftime('%d-%m-%Y %H:%M:%S')
             body_msg = "Ce message est pour vous indiquer qu'un mouvement a été détecté sur votre caméra timestamp: " \
                        + timestamp
-            send_email.send_email(dest="tr1013919@gmail.com", subject="Détection de mouvement",
+            send_email.send_email(dest=self.entry_mail_dest.get(), subject="Détection de mouvement",
                               body=body_msg, image_bytestring=self.bytearray_img)
 
     def change_img(self, bytearray_img):
