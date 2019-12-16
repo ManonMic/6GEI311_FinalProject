@@ -10,6 +10,8 @@ from image_processing import process, imshow, get_photo_offline
 
 
 img_list = []
+processed_outputs = []
+img_changed_flag = False
 
 
 def get_img():
@@ -29,9 +31,30 @@ class GetImgThread(Thread):
             get_img()
 
 
-class Interface:
-    def __init__(self):
-        self.root = tk.Tk()
+class ProcessImgThread(Thread):
+    def __init__(self, event):
+        Thread.__init__(self)
+        self._stopped = event
+
+    def stop(self):
+        self._stopped.set()
+
+    def run(self):
+        while not self._stopped.wait(0.5):
+            if len(img_list) > 1:
+                imgs = []
+                for i in range(2):
+                    imgs.append(img_list[i])
+                for i in range(2):
+                    del img_list[0]
+                img_changed_flag = False
+                output_img, movement = process(imgs)
+                processed_outputs.append((output_img, movement))
+
+
+class Interface(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
         self.running = True
         self.send_mail_enabled = True
         self.email_last_sent = 0
@@ -39,18 +62,19 @@ class Interface:
         self.image = None
 
         self.bytearray_img = None
-        self.image_display = tk.Label(self.root, image=self.image)
-        self.button_running = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
-        self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
-        self.button_send = tk.Button(self.root, text="Envoyer mail", command=self.send_mail)
-        self.label_get_email = tk.Label(self.root, text="Email du destinataire = ")
-        self.entry_mail_dest = tk.Entry(self.root)
+        self.image_display = tk.Label(master, image=self.image)
+        self.button_running = tk.Button(master, text="On", foreground="green", command=self.disable_send_mail)
+        self.button_close = tk.Button(master, text="Fermer", background="red", command=self.master.quit)
+        self.button_send = tk.Button(master, text="Envoyer mail", command=self.send_mail)
+        self.label_get_email = tk.Label(master, text="Email du destinataire = ")
+        self.entry_mail_dest = tk.Entry(master)
 
-        self.root.geometry("1600x900")
-        self.root.title("Logiciel de surveillance")
+        master.geometry("1600x900")
+        master.title("Logiciel de surveillance")
         self.label = tk.Label()
 
         self.create_layout()
+        self.updater()
 
     def create_layout(self):
         self.button_running.grid(row=0, column=2, columnspan=3, rowspan=1)
@@ -67,7 +91,7 @@ class Interface:
         self.running = running
 
     def on_closing(self):
-        self.root.destroy()
+        self.master.destroy()
         self.set_running(False)
 
     def is_email_in_cooldown(self):
@@ -91,7 +115,7 @@ class Interface:
             self.image = ImageTk.PhotoImage(resized)
             self.image_display.configure(image=self.image)
             self.image_display.image = self.image
-            self.root.update()
+            self.master.update()
 
     def disable_send_mail(self):
         if self.send_mail_enabled:
@@ -103,22 +127,39 @@ class Interface:
             self.button_running['foreground'] = "green"
             self.button_running['text'] = "On"
 
+    def updater(self):
+        if self.running and len(processed_outputs) > 0:
+            response = processed_outputs.pop(0)
+            self.change_img(response[0])
+            if response[1] and self.send_mail_enabled and not self.is_email_in_cooldown():
+                self.send_mail()
+        self.after(200, self.updater)
+
 
 if __name__ == "__main__":
-    gui = Interface()
+    root = tk.Tk()
     stop_flag = Event()
     img_thread = GetImgThread(stop_flag)
     img_thread.start()
-    while gui.is_running():
-        if len(img_list) > 1:
-            imgs = []
-            for i in range(2):
-                imgs.append(img_list[i])
-            del img_list[0]
-            output_img, movement = process(imgs)
-            gui.change_img(output_img)
-            if movement and gui.send_mail_enabled and not gui.is_email_in_cooldown():
-                gui.send_mail()
+    img_processing_thread = ProcessImgThread(stop_flag)
+    img_processing_thread.start()
+    gui = Interface(root)
+    root.mainloop()
+    # while gui.is_running():
+    #     if img_changed_flag is False and len(processed_imgs) > 0:
+    #         img = processed_imgs.pop(0)
+    #         gui.change_img(img)
+    #         img_changed_flag = True
+    #     gui.updater()
+    # if len(img_list) > 1:
+    #     imgs = []
+    #     for i in range(2):
+    #         imgs.append(img_list[i])
+    #     del img_list[0]
+    #     output_img, movement = process(imgs)
+    #     gui.change_img(output_img)
+    #     if movement and gui.send_mail_enabled and not gui.is_email_in_cooldown():
+    #         gui.send_mail()
 
     img_thread.stop()
     # TODO: Regarder comment faire en sorte que l'interface ne soit pas bloqué par les autres actions
