@@ -5,7 +5,6 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 import os
 import time
-from io import BytesIO
 
 from PIL import Image
 
