@@ -1,14 +1,9 @@
 import sys
 
-# from ip_cam_image import get_photo
-
-from imageio import imread
 from io import BytesIO
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 from PIL import Image
-from scipy.linalg import norm
 from scipy.ndimage import gaussian_filter as gaussian
 from skimage.color import label2rgb
 from skimage.draw import polygon_perimeter, set_color
@@ -94,8 +89,6 @@ def process(img_arr):
 
     img_diff = _subtract_images(img1_prepared, img2_prepared)
 
-    # imshow(img_diff)
-    # thresh = threshold_otsu(img_diff)
     bw = closing(img_diff > 0, square(3))
     cleared = clear_border(bw)
 
@@ -120,7 +113,10 @@ def process(img_arr):
                 if maxc > maxcol:
                     maxcol = maxr
 
-        rr, cc = polygon_perimeter([minrow - 1, maxrow - 1, maxrow - 1, minrow - 1],
-                                   [mincol - 1, mincol - 1, maxcol - 1, maxcol - 1])
-        set_color(output_img, (rr, cc), [255, 0, 0])
+        # sorry not sorry
+        for i in range(3):
+            rr, cc = polygon_perimeter([minrow - i, maxrow - i, maxrow - i, minrow - i],
+                                       [mincol - i, mincol - i, maxcol - i, maxcol - i])
+
+            set_color(output_img, (rr, cc), [255, 0, 0])
     return output_img, movement

@@ -1,8 +1,6 @@
-import datetime
-import time
+from datetime import datetime
 import tkinter as tk
 from PIL import Image, ImageTk
-import threading
 import send_email
 from threading import Thread, Event
 from img_collector import get_photo
@@ -10,6 +8,7 @@ from image_processing import process, imshow, get_photo_offline
 
 
 img_list = []
+processed_outputs = []
 
 
 def get_img():
@@ -25,39 +24,66 @@ class GetImgThread(Thread):
         self._stopped.set()
 
     def run(self):
-        while not self._stopped.wait(1):
+        while not self._stopped.wait(0.5):
             get_img()
 
 
-class Interface:
-    def __init__(self):
-        self.root = tk.Tk()
+class ProcessImgThread(Thread):
+    def __init__(self, event):
+        Thread.__init__(self)
+        self._stopped = event
+
+    def stop(self):
+        self._stopped.set()
+
+    def run(self):
+        while not self._stopped.wait(0.01):
+            if len(img_list) > 1:
+                imgs = []
+                for i in range(2):
+                    imgs.append(img_list[i])
+                for i in range(2):
+                    del img_list[0]
+                output_img, movement = process(imgs)
+                processed_outputs.append((output_img, movement))
+
+
+class Interface(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
         self.running = True
-        self.send_mail_enabled = True
-        self.email_last_sent = 0
-        self.email_sending_cooldown = 10
+        self.send_mail_enabled = False
+        self.email_last_sent = None
+        self.email_sending_cooldown_in_minutes = 10
         self.image = None
 
-        self.bytearray_img = None
-        self.image_display = tk.Label(self.root, image=self.image)
-        self.button_running = tk.Button(self.root, text="On", foreground="green", command=self.disable_send_mail)
-        self.button_close = tk.Button(self.root, text="Fermer", background="red", command=self.root.quit)
-        self.button_send = tk.Button(self.root, text="Envoyer mail", command=self.send_mail)
-        self.label_get_email = tk.Label(self.root, text="Email du destinataire = ")
-        self.entry_mail_dest = tk.Entry(self.root)
+        self.byte_array_img = None
+        self.image_display = tk.Label(master, image=self.image)
 
-        self.root.geometry("1600x900")
-        self.root.title("Logiciel de surveillance")
+        self.email_notifications_recipient = tk.Label(master, text="Recipient email: ")
+        default_email = "tr1013919@gmail.com"
+        self.entry_mail_dest = tk.Entry(master)
+        self.entry_mail_dest.insert(tk.END, default_email)
+        self.button_running = tk.Button(master,
+                                        text="Email notifications: Off",
+                                        foreground="white",
+                                        background="red",
+                                        command=self.toggle_email_notifications)
+        self.btn_send_test_notification = tk.Button(master, text="Send notification test",
+                                                    command=lambda: self.send_email(test_email=True))
+
+        master.geometry("1600x900")
+        master.title("Surveillance camera")
         self.label = tk.Label()
 
         self.create_layout()
+        self.updater()
 
     def create_layout(self):
         self.button_running.grid(row=0, column=2, columnspan=3, rowspan=1)
-        self.button_close.grid(row=1, column=2, columnspan=3, rowspan=1)
-        self.label_get_email.grid(row=2, column=2, columnspan=3, rowspan=1)
-        self.entry_mail_dest.grid(row=3, column=2, columnspan=3, rowspan=1)
-        self.button_send.grid(row=4, column=2, columnspan=3, rowspan=1)
+        self.email_notifications_recipient.grid(row=2, column=2, columnspan=10)
+        self.entry_mail_dest.grid(row=2, column=3, columnspan=10)
+        self.btn_send_test_notification.grid(row=4, column=2, columnspan=3, rowspan=1)
         self.image_display.grid(row=5, column=2, columnspan=2, rowspan=2)
 
     def is_running(self):
@@ -67,59 +93,85 @@ class Interface:
         self.running = running
 
     def on_closing(self):
-        self.root.destroy()
+        self.master.destroy()
         self.set_running(False)
 
     def is_email_in_cooldown(self):
-        now = time.time()
-        elapsed = (now - self.email_last_sent) / (3600 * 60)
-        return not (elapsed > self.email_sending_cooldown)
+        now = datetime.now()
+        if self.email_last_sent is None:
+            self.email_last_sent = now
+            return False
+        elapsed_minutes = abs(now.second - self.email_last_sent.second) // 60
+        return not (elapsed_minutes > self.email_sending_cooldown_in_minutes)
 
-    def send_mail(self):
-            self.email_last_sent = time.time()
-            timestamp = datetime.datetime.fromtimestamp(self.email_last_sent).strftime('%d-%m-%Y %H:%M:%S')
-            body_msg = "Ce message est pour vous indiquer qu'un mouvement a été détecté sur votre caméra timestamp: " \
+    def email_has_recipient(self):
+        return len(self.entry_mail_dest.get()) > 0
+
+    def can_send_an_email(self, test_email=False):
+        has_recipient = self.email_has_recipient()
+        if test_email:
+            return has_recipient
+        else:
+            return self.send_mail_enabled and not self.is_email_in_cooldown() and has_recipient
+
+    def send_email(self, test_email=False):
+        if self.can_send_an_email(test_email=test_email):
+            timestamp = self.email_last_sent.strftime('%d-%m-%Y %H:%M:%S')
+            subject = "Movement detected!"
+            body_msg = "There was movement detected on the camera.\n\nTimestamp: " \
                        + timestamp
-            send_email.send_email(dest=self.entry_mail_dest.get(), subject="Détection de mouvement",
-                              body=body_msg, image_bytestring=self.bytearray_img)
+            img = self.byte_array_img
+            if test_email:
+                subject = "Notification test"
+                body_msg = "This is only a test. \n\n" \
+                           "If you are receiving this email, the notification system works." \
+                           "\n\nNo movements were detected."
+                img = None
+            else:
+                self.email_last_sent = datetime.now()
+            thread_send_email = Thread(target=lambda: send_email.send_email(dest=self.entry_mail_dest.get(),
+                                                                            subject=subject,
+                                                                            body=body_msg,
+                                                                            image_bytestring=img))
+            thread_send_email.start()
 
-    def change_img(self, bytearray_img):
+    def change_img(self, byte_array_img):
         if self.is_running():
-            self.bytearray_img = bytearray_img
-            converted_img = Image.fromarray(bytearray_img.astype('uint8'))
+            self.byte_array_img = byte_array_img
+            converted_img = Image.fromarray(byte_array_img.astype('uint8'))
             resized = converted_img.resize((1600, 900), Image.ANTIALIAS)
             self.image = ImageTk.PhotoImage(resized)
             self.image_display.configure(image=self.image)
             self.image_display.image = self.image
-            self.root.update()
+            self.master.update()
 
-    def disable_send_mail(self):
-        if self.send_mail_enabled:
-            self.send_mail_enabled = False
-            self.button_running['foreground'] = "red"
-            self.button_running['text'] = "Off"
-        else:
+    def toggle_email_notifications(self):
+        if len(self.entry_mail_dest.get()) > 0 and not self.send_mail_enabled:
             self.send_mail_enabled = True
-            self.button_running['foreground'] = "green"
-            self.button_running['text'] = "On"
+            self.button_running['background'] = "green"
+            self.button_running['text'] = "Email notifications: On"
+            return
+        self.send_mail_enabled = False
+        self.button_running['background'] = "red"
+        self.button_running['text'] = "Email notifications: Off"
+
+    def updater(self):
+        if self.running and len(processed_outputs) > 0:
+            response = processed_outputs.pop(0)
+            self.change_img(response[0])
+            if response[1]:
+                self.send_email()
+        self.after(10, self.updater)
 
 
 if __name__ == "__main__":
-    gui = Interface()
+    root = tk.Tk()
     stop_flag = Event()
     img_thread = GetImgThread(stop_flag)
     img_thread.start()
-    while gui.is_running():
-        if len(img_list) > 1:
-            imgs = []
-            for i in range(2):
-                imgs.append(img_list[i])
-            del img_list[0]
-            output_img, movement = process(imgs)
-            gui.change_img(output_img)
-            if movement and gui.send_mail_enabled and not gui.is_email_in_cooldown():
-                gui.send_mail()
-
+    img_processing_thread = ProcessImgThread(stop_flag)
+    img_processing_thread.start()
+    gui = Interface(root)
+    root.mainloop()
     img_thread.stop()
-    # TODO: Regarder comment faire en sorte que l'interface ne soit pas bloqué par les autres actions
-    # TODO: Arrêter le thread d'acquisition des images lorsque l'interface est fermé
+    img_processing_thread.stop()
