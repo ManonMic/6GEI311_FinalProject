@@ -61,7 +61,7 @@ class Interface(tk.Frame):
         self.image_display = tk.Label(master, image=self.image)
 
         self.email_notifications_recipient = tk.Label(master, text="Recipient email: ")
-        default_email = "tr1013919@gmail.com"
+        default_email = ""
         self.entry_mail_dest = tk.Entry(master)
         self.entry_mail_dest.insert(tk.END, default_email)
         self.button_running = tk.Button(master,
